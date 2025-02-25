@@ -1,8 +1,9 @@
 using System.Collections;
 using System.Collections.Generic;
+using Unity.Netcode;
 using UnityEngine;
 
-public class moveScript : MonoBehaviour
+public class moveScript : NetworkBehaviour
 {
 
     private float xVelocity;
@@ -17,9 +18,14 @@ public class moveScript : MonoBehaviour
     public float groundDistance = 2f;  // Distance to check for ground
     public LayerMask groundMask;
 
+
     // Start is called before the first frame update
     void Start()
     {
+        if (!IsOwner)
+        {
+            cam.gameObject.SetActive(false);
+        }
         rb = GetComponent<Rigidbody>();
 
     }
@@ -27,13 +33,28 @@ public class moveScript : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
+        if (!IsOwner) return;
         movePlayer();
         Jump();
     }
 
     void LateUpdate()
     {
+        if (!IsOwner) return;
         moveMouse();
+    }
+
+    public override void OnNetworkSpawn()
+    {
+         Debug.Log($"OnNetworkSpawn: IsOwner = {IsOwner}, ClientId = {NetworkManager.Singleton.LocalClientId}, OwnerClientId = {NetworkObject.OwnerClientId}");
+        if (IsOwner)
+        {
+            var waitingCam = GameObject.Find("MenuCamera");
+            if (waitingCam != null)
+            {
+                waitingCam.SetActive(false);
+            }
+        }
     }
 
     void moveMouse()

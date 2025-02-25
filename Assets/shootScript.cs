@@ -35,7 +35,7 @@ public class shootScript : MonoBehaviour
                 Debug.Log("Hit: " + bulletHit.collider.name); 
                 if (bulletHit.collider.tag == "Player") {
                     
-                    Destroy(bulletHit.collider.transform.root.gameObject);
+                    bulletHit.collider.transform.root.gameObject.SetActive(false);
                 }
                 // Additional logic if the raycast hits something
             }
