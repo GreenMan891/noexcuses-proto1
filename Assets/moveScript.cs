@@ -28,8 +28,12 @@ public class moveScript : MonoBehaviour
     void Update()
     {
         movePlayer();
-        moveMouse();
         Jump();
+    }
+
+    void LateUpdate()
+    {
+        moveMouse();
     }
 
     void moveMouse()
@@ -38,16 +42,38 @@ public class moveScript : MonoBehaviour
         cameraRot.x += -Input.GetAxis("Mouse Y") * lookSpeed;
         cameraRot.x = Mathf.Clamp((cameraRot.x <= 180) ? cameraRot.x : -(360 - cameraRot.x), -80f, 80f);
         cam.transform.rotation = Quaternion.Euler(cameraRot);
-        playerRot.y = Input.GetAxis("Mouse X") * lookSpeed;
-        transform.Rotate(playerRot);
+
+        playerRot.y += Input.GetAxis("Mouse X") * lookSpeed;
+        transform.rotation = Quaternion.Euler(0, playerRot.y, 0);
     }
 
 
     void movePlayer()
     {
-        xVelocity = Input.GetAxis("Horizontal");
-        zVelocity = Input.GetAxis("Vertical");
-
+        if (Input.GetKey(KeyCode.W))
+        {
+            zVelocity = 1;
+        }
+        else if (Input.GetKey(KeyCode.S))
+        {
+            zVelocity = -1;
+        }
+        else
+        {
+            zVelocity = 0;
+        }
+        if (Input.GetKey(KeyCode.A))
+        {
+            xVelocity = -1;
+        }
+        else if (Input.GetKey(KeyCode.D))
+        {
+            xVelocity = 1;
+        }
+        else
+        {
+            xVelocity = 0;
+        }
 
 
         // Create an input vector in local space
@@ -73,7 +99,8 @@ public class moveScript : MonoBehaviour
         Vector3 moveDir = (forward * input.z + right * input.x).normalized;
 
         // Apply the movement, preserving the current vertical velocity
-        rb.velocity = moveDir * moveSpeed + new Vector3(0, rb.velocity.y, 0);
+        Vector3 targetVelocity = moveDir * moveSpeed + new Vector3(0, rb.velocity.y, 0);
+        rb.velocity = Vector3.Lerp(rb.velocity, targetVelocity, Time.deltaTime * 10f);
     }
 
     void Jump()

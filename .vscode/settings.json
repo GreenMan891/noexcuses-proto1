@@ -51,5 +51,5 @@
         "temp/": true,
         "Temp/": true
     },
-    "dotnet.defaultSolution": "no excuses proto 1.sln"
+    "dotnet.defaultSolution": "noexcuses-proto1.sln"
 }
