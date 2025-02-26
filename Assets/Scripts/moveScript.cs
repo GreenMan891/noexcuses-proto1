@@ -1,6 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
-using Unity.Netcode;
+using FishNet.Object;
 using UnityEngine;
 
 public class moveScript : NetworkBehaviour
@@ -22,10 +22,6 @@ public class moveScript : NetworkBehaviour
     // Start is called before the first frame update
     void Start()
     {
-        if (!IsOwner)
-        {
-            cam.gameObject.SetActive(false);
-        }
         rb = GetComponent<Rigidbody>();
 
     }
@@ -33,20 +29,30 @@ public class moveScript : NetworkBehaviour
     // Update is called once per frame
     void Update()
     {
-        if (!IsOwner) return;
+        if (!IsOwner)
+        {
+            cam.gameObject.SetActive(false);
+            return;
+        } else {
+            cam.gameObject.SetActive(true);
+        }
         movePlayer();
         Jump();
     }
 
+
+
     void LateUpdate()
     {
-        if (!IsOwner) return;
+        if (!IsOwner)
+        {
+            return;
+        }
         moveMouse();
     }
 
-    public override void OnNetworkSpawn()
+    public void switchCam()
     {
-        Debug.Log($"OnNetworkSpawn: IsOwner = {IsOwner}, ClientId = {NetworkManager.Singleton.LocalClientId}, OwnerClientId = {NetworkObject.OwnerClientId}");
         if (IsOwner)
         {
             var waitingCam = GameObject.Find("MenuCamera");
