@@ -46,7 +46,7 @@ public class moveScript : NetworkBehaviour
 
     public override void OnNetworkSpawn()
     {
-         Debug.Log($"OnNetworkSpawn: IsOwner = {IsOwner}, ClientId = {NetworkManager.Singleton.LocalClientId}, OwnerClientId = {NetworkObject.OwnerClientId}");
+        Debug.Log($"OnNetworkSpawn: IsOwner = {IsOwner}, ClientId = {NetworkManager.Singleton.LocalClientId}, OwnerClientId = {NetworkObject.OwnerClientId}");
         if (IsOwner)
         {
             var waitingCam = GameObject.Find("MenuCamera");
