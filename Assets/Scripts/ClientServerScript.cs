@@ -1,28 +1,37 @@
 using FishNet;
+using FishNet.Object;
 using UnityEngine;
+using System.Collections;
 
-public class ClientServerScript : MonoBehaviour
+public class ClientServerScript : NetworkBehaviour
 {
-    [SerializeField] private bool isServer = true;
-    
     private void Start()
     {
-        if (isServer)
+        StartCoroutine(TryStartAsClientThenHost());
+    }
+
+    private IEnumerator TryStartAsClientThenHost()
+    {
+        // Try connecting as a client first
+        Debug.Log("Trying to connect as a client...");
+        InstanceFinder.ClientManager.StartConnection();
+
+        // Wait a few seconds to check if the connection is successful
+        yield return new WaitForSeconds(3);
+
+        if (!InstanceFinder.ClientManager.Connection.IsActive)
         {
-            // Start as host (server + client)
+            Debug.Log("No server found, starting as host...");
+
+            // Start as server
             InstanceFinder.ServerManager.StartConnection();
+
+            // Start as client (host mode)
             InstanceFinder.ClientManager.StartConnection();
         }
         else
         {
-            // Start as client only
-            InstanceFinder.ClientManager.StartConnection();
+            Debug.Log("Connected as a client.");
         }
-    }
-
-    private void OnDestroy()
-    {
-        InstanceFinder.ServerManager.StopConnection(true);
-        InstanceFinder.ClientManager.StopConnection();
     }
 }

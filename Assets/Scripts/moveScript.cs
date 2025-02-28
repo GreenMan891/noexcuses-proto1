@@ -145,5 +145,10 @@ public class moveScript : NetworkBehaviour
         }
     }
 
+    public void TeleportPlayer(Vector3 position)
+    {
+        transform.position = position;
+    }
+
 
 }

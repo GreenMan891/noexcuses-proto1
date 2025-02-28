@@ -1,47 +1,35 @@
 using FishNet.Connection;
 using FishNet.Object;
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
 public class PlayerController : NetworkBehaviour
 {
+    [SerializeField] private Transform[] spawnPoints;
     [SerializeField] private GameObject playerPrefab;
-    [SerializeField] private static Transform[] spawnPoints = new Transform[2];
-    private static int playersRegistered;
+    private int playersSpawned = 0;
 
-    public static void SetSpawnPoints(Transform[] points) => spawnPoints = points;
-    public override void OnStartNetwork()
+    public override void OnStartClient()
     {
         base.OnStartNetwork();
-        if (IsServer)
-        {
-            SpawnPlayer(Owner);
-        }
-
+        SpawnPlayer(Owner);
     }
 
     [ServerRpc(RequireOwnership = false)]
-    private void SpawnPlayer(NetworkConnection conn)
+    private void SpawnPlayer(NetworkConnection client = null)
     {
-        GameObject player = Instantiate(playerPrefab);
-        Spawn(player, conn);
+        GameObject player = Instantiate(playerPrefab, spawnPoints[playersSpawned].position, Quaternion.identity);
+        Spawn(player, client);
+        playersSpawned++;
 
-        playersRegistered++;
-        if (playersRegistered == 2)
-        {
-           TeleportAllPlayers();
-        }
+        GameManager.Instance.RegisterPlayer(player);
     }
 
-    private void TeleportAllPlayers() {
-        if (!IsServer || spawnPoints == null || spawnPoints.Length < 2) return;
+    // New method to move the client/player to a specified spawn point
+    [ServerRpc(RequireOwnership = false)]
+    public void TeleportToPositionServerRpc(GameObject player, Vector3 pos)
+    {
 
-        NetworkObject[] players = FindObjectsOfType<NetworkObject>();
-        for (int i = 0; i < Mathf.Min(players.Length, spawnPoints.Length); i++)
-        {
-            players[i].transform.position = spawnPoints[i].position;
-            players[i].transform.rotation = spawnPoints[i].rotation;
-        }
+        // Move the player's transform to the chosen spawn point.
+        player.transform.position = pos;
     }
 }
