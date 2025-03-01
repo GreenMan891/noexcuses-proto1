@@ -1,11 +1,12 @@
 using System.Collections;
 using System.Collections.Generic;
 using FishNet.Object;
+using FishNet.Object.Synchronizing;
 using UnityEngine;
 
 public class moveScript : NetworkBehaviour
 {
-
+    //MOVEMENT
     private float xVelocity;
     private float zVelocity;
     public float moveSpeed = 10f;
@@ -18,11 +19,15 @@ public class moveScript : NetworkBehaviour
     public float groundDistance = 2f;  // Distance to check for ground
     public LayerMask groundMask;
 
+    private playerState playerState;
+
+
 
     // Start is called before the first frame update
     void Start()
     {
         rb = GetComponent<Rigidbody>();
+        playerState = GetComponent<playerState>();
 
     }
 
@@ -33,9 +38,12 @@ public class moveScript : NetworkBehaviour
         {
             cam.gameObject.SetActive(false);
             return;
-        } else {
+        }
+        else
+        {
             cam.gameObject.SetActive(true);
         }
+        if (!playerState.IsAlive.Value && playerState != null) return;
         movePlayer();
         Jump();
     }
@@ -48,6 +56,7 @@ public class moveScript : NetworkBehaviour
         {
             return;
         }
+        if (!playerState.IsAlive.Value && playerState != null) return;
         moveMouse();
     }
 
@@ -145,9 +154,9 @@ public class moveScript : NetworkBehaviour
         }
     }
 
-    public void TeleportPlayer(Vector3 position)
+    public void ResetPlayer(Vector3 spawnPoint)
     {
-        transform.position = position;
+        transform.position = spawnPoint;
     }
 
 

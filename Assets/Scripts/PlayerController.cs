@@ -21,15 +21,6 @@ public class PlayerController : NetworkBehaviour
         Spawn(player, client);
         playersSpawned++;
 
-        GameManager.Instance.RegisterPlayer(player);
-    }
 
-    // New method to move the client/player to a specified spawn point
-    [ServerRpc(RequireOwnership = false)]
-    public void TeleportToPositionServerRpc(GameObject player, Vector3 pos)
-    {
-
-        // Move the player's transform to the chosen spawn point.
-        player.transform.position = pos;
     }
 }

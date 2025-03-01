@@ -1,8 +1,9 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using FishNet.Object;
 
-public class shootScript : MonoBehaviour
+public class shootScript : NetworkBehaviour
 {
     public Camera cam;
     RaycastHit bulletHit;
@@ -13,36 +14,41 @@ public class shootScript : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-        
+
     }
 
     // Update is called once per frame
     void Update()
     {
-        Shoot();
-    }
+        if (!IsOwner) return;
 
-    void Shoot() {
-        if (Input.GetMouseButton(0) && canFire) {
+        if (Input.GetMouseButtonDown(0) && canFire)
+        {
             canFire = false;
             StartCoroutine(ShootDelay());
-            Ray ray = new Ray(cam.transform.position, cam.transform.forward);
-            GameObject bulletInstance = Instantiate(bullet, cam.transform.position + transform.forward * 1.0f, Quaternion.identity);
-            bulletInstance.transform.eulerAngles = new Vector3(90, transform.eulerAngles.y, transform.eulerAngles.z);
-            bulletInstance.GetComponent<Rigidbody>().AddForce(ray.direction * 50000);
-
-            if (Physics.Raycast(ray, out bulletHit, 300f, ~LayerMask.GetMask("Bullet"))) {
-                Debug.Log("Hit: " + bulletHit.collider.name); 
-                if (bulletHit.collider.tag == "Player") {
-                    
-                    bulletHit.collider.transform.root.gameObject.SetActive(false);
-                }
-                // Additional logic if the raycast hits something
-            }
+            ShootServerRPC(cam.transform.position, cam.transform.forward);
         }
+
+
     }
 
-    IEnumerator ShootDelay() {
+    [ServerRpc]
+    void ShootServerRPC(Vector3 origin, Vector3 direction)
+    {
+            Ray ray = new Ray(origin, direction);
+            if (Physics.Raycast(ray, out bulletHit, 300f))
+            {
+                Debug.Log("Hit: " + bulletHit.collider.name);
+                playerState hitPlayerState = bulletHit.collider.transform.root.GetComponent<playerState>();
+                if (bulletHit.collider.CompareTag("Player") || bulletHit.collider.CompareTag("Head"))
+                {
+                    hitPlayerState.GetHit();
+                }
+            }
+    }
+
+    IEnumerator ShootDelay()
+    {
         yield return new WaitForSeconds(fireRate);
         canFire = true;
     }

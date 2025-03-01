@@ -5,6 +5,7 @@ using FishNet.Object;
 using FishNet.Connection;
 using UnityEngine;
 using FishNet.Component.Transforming;
+using FishNet.Object.Synchronizing;
 
 
 public class GameManager : NetworkBehaviour
@@ -13,8 +14,13 @@ public class GameManager : NetworkBehaviour
 
     public GameObject ClientServerManager;
 
-    private List<GameObject> players = new List<GameObject>();
+    private List<GameObject> gamers = new List<GameObject>();
     [SerializeField] private Transform[] spawnPoints;
+
+    public int player1Score = 0;
+    public int player2Score = 0;
+    private int currentRound = 0;
+
 
     private void Awake()
     {
@@ -27,39 +33,70 @@ public class GameManager : NetworkBehaviour
         Instance = this;
     }
 
-    public void RegisterPlayer(GameObject player)
+    [ServerRpc(RequireOwnership = false)]
+    public void HandleRoundReset(playerState deadPlayer)
     {
         if (!IsServer) return;
-        if (!players.Contains(player))
+        Debug.Log("about to run round reset");
+        playerState[] players = FindObjectsOfType<playerState>();
+        playerState winner = null;
+        foreach (playerState player in players)
         {
-            players.Add(player);
-            Debug.Log($"Player registered: {player.name}");
-
-            // Check if both players have joined
-            if (players.Count == 2)
+            gamers.Add(player.gameObject);
+            if (player != deadPlayer)
             {
-                StartGame();
+                winner = player;
             }
         }
-    }
 
-    [ServerRpc]
-    private void StartGame()
-    {
-
-        if (!IsServer) return;
-
-        Debug.Log("Both players are present. Starting game...");
-
-        // Example: Teleport players to designated starting spawn points if available.
-        if (spawnPoints != null && spawnPoints.Length >= 2)
-        {   
-            ClientServerManager.GetComponent<PlayerController>().TeleportToPositionServerRpc(players[0], new Vector3(50,50,50));
-            ClientServerManager.GetComponent<PlayerController>().TeleportToPositionServerRpc(players[1], new Vector3(80,80,80));
+        if (winner != null)
+        {
+            IncreaseScore(winner);
+            Debug.Log($"{winner.gameObject.name} wins the round!");
+            AnnounceWinner(winner.Owner.ClientId);
         }
 
-        // Additional game-start logic (e.g., starting timers, enabling controls, etc.)
+        ResetRound();
     }
+
+    [ServerRpc(RequireOwnership = false)]
+    private void IncreaseScore(playerState winner) {
+       if ( winner.Owner.ClientId == 0 ) {
+           player1Score++;
+       } else {
+           player2Score++;
+       }
+       Debug.Log($"Player 1: {player1Score} Player 2: {player2Score}");
+    }
+
+    [ObserversRpc]
+    private void AnnounceWinner(int clientId) {
+
+        Debug.Log($"Announcing winner to client {clientId}");
+    }
+
+
+    [ServerRpc(RequireOwnership = false)]
+    private void ResetRound() {
+        currentRound++;
+        Debug.Log($"Round {currentRound} starting...");
+        playerState[] players = FindObjectsOfType<playerState>();
+        RandomizeObjects();
+        for (int i = 0; i < players.Length; i++)
+        {
+            players[i].ResetPlayer(spawnPoints[i].position);
+        }
+    }
+
+    private void RandomizeObjects() {
+        //idk yet we will see
+    }
+    // Example: Teleport players to designated starting spawn points if available.
+    // if (spawnPoints != null && spawnPoints.Value.Length >= 2)
+    // {   
+    // }
+
+    // Additional game-start logic (e.g., starting timers, enabling controls, etc.)
 
 
     // [ServerRpc(RequireOwnership = false)]
