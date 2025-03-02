@@ -6,6 +6,9 @@ using FishNet.Connection;
 using UnityEngine;
 using FishNet.Component.Transforming;
 using FishNet.Object.Synchronizing;
+using UnityEngine.UI;
+using UnityEditor;
+using UnityEngine.SocialPlatforms.Impl;
 
 
 public class GameManager : NetworkBehaviour
@@ -15,6 +18,20 @@ public class GameManager : NetworkBehaviour
     public GameObject ClientServerManager;
 
     private List<GameObject> gamers = new List<GameObject>();
+
+    [SerializeField] private Canvas canvas;
+
+    [SerializeField] private Image player1ScoreImage;
+    [SerializeField] private Image player2ScoreImage;
+
+    [SerializeField] private Image winImage;
+    [SerializeField] private Image loseImage;
+
+    [SerializeField] private Sprite none;
+    [SerializeField] private Sprite one;
+    [SerializeField] private Sprite two;
+    [SerializeField] private Sprite three;
+
     [SerializeField] private Transform[] spawnPoints;
 
     public int player1Score = 0;
@@ -22,6 +39,21 @@ public class GameManager : NetworkBehaviour
     private int currentRound = 0;
 
 
+
+    //list of things to do for the prototype:
+    // proper networking
+    // winning screen if you hit 3 points
+    // randomize obstacles
+    // basic title screen
+    // normalize ui
+    // proper rotation
+
+    //things for the full game:
+    // timer
+    // better movement
+    // matchmaking 
+    // art style (cream white?)
+    // sound effects 
     private void Awake()
     {
         // Simple singleton pattern
@@ -53,32 +85,83 @@ public class GameManager : NetworkBehaviour
         {
             IncreaseScore(winner);
             Debug.Log($"{winner.gameObject.name} wins the round!");
-            AnnounceWinner(winner.Owner.ClientId);
+            AddWinImage(winner.Owner.ClientId);
         }
+        StartCoroutine(DelayedReset());
+    }
 
+    private IEnumerator DelayedReset()
+    {
+        yield return new WaitForSeconds(4f);
         ResetRound();
     }
 
     [ServerRpc(RequireOwnership = false)]
-    private void IncreaseScore(playerState winner) {
-       if ( winner.Owner.ClientId == 0 ) {
-           player1Score++;
-       } else {
-           player2Score++;
-       }
-       Debug.Log($"Player 1: {player1Score} Player 2: {player2Score}");
+    private void IncreaseScore(playerState winner)
+    {
+        if (winner.Owner.ClientId == 0)
+        {
+            player1Score++;
+        }
+        else
+        {
+            player2Score++;
+        }
+        ChangePlayerScores(player1Score, player2Score);
+        Debug.Log($"Player 1: {player1Score} Player 2: {player2Score}");
     }
 
     [ObserversRpc]
-    private void AnnounceWinner(int clientId) {
+    private void ChangePlayerScores(int score1, int score2)
+    {
+        if (score1 == 1)
+        {
+            player1ScoreImage.sprite = one;
+        }
+        else if (score1 == 2)
+        {
+            player1ScoreImage.sprite = two;
+        }
+        else if (score1 == 3)
+        {
+            player1ScoreImage.sprite = three;
+        }
+        if (score2 == 1)
+        {
+            player2ScoreImage.sprite = one;
+        }
+        else if (score2 == 2)
+        {
+            player2ScoreImage.sprite = two;
+        }
+        else if (score2 == 3)
+        {
+            player2ScoreImage.sprite = three;
+        }
+    }
 
-        Debug.Log($"Announcing winner to client {clientId}");
+    [ObserversRpc]
+    private void AddWinImage(int clientId)
+    {
+        if (ClientManager.Connection.ClientId == clientId) // Compare with LocalClientId
+        {
+            winImage.gameObject.SetActive(true);
+            loseImage.gameObject.SetActive(false);
+        }
+        else
+        {
+            loseImage.gameObject.SetActive(true);
+            winImage.gameObject.SetActive(false);
+        }
+
     }
 
 
     [ServerRpc(RequireOwnership = false)]
-    private void ResetRound() {
+    private void ResetRound()
+    {
         currentRound++;
+        removeWinImagery();
         Debug.Log($"Round {currentRound} starting...");
         playerState[] players = FindObjectsOfType<playerState>();
         RandomizeObjects();
@@ -88,7 +171,15 @@ public class GameManager : NetworkBehaviour
         }
     }
 
-    private void RandomizeObjects() {
+    [ObserversRpc]
+    private void removeWinImagery()
+    {
+        winImage.gameObject.SetActive(false);
+        loseImage.gameObject.SetActive(false);
+    }
+
+    private void RandomizeObjects()
+    {
         //idk yet we will see
     }
     // Example: Teleport players to designated starting spawn points if available.

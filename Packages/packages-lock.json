@@ -1,5 +1,21 @@
 {
   "dependencies": {
+    "com.etdofresh.fishyeos": {
+      "version": "https://github.com/ETdoFresh/FishyEOS.git?path=/FishNet/Plugins/FishyEOS",
+      "depth": 0,
+      "source": "git",
+      "dependencies": {},
+      "hash": "6ba86fe911be3c95b78b2af068c831b82c296691"
+    },
+    "com.playeveryware.eos": {
+      "version": "file:C:/Users/green/Downloads/com.playeveryware.eos-4.0.0.tgz",
+      "depth": 0,
+      "source": "local-tarball",
+      "dependencies": {
+        "com.unity.nuget.newtonsoft-json": "3.0.2",
+        "com.unity.editorcoroutines": "1.0.0"
+      }
+    },
     "com.unity.burst": {
       "version": "1.8.11",
       "depth": 2,

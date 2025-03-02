@@ -157,6 +157,13 @@ public class moveScript : NetworkBehaviour
     public void ResetPlayer(Vector3 spawnPoint)
     {
         transform.position = spawnPoint;
+        ResetLocation(spawnPoint);
+    }
+
+    [ObserversRpc]
+    public void ResetLocation(Vector3 spawnPoint)
+    {
+        transform.position = spawnPoint;
     }
 
 

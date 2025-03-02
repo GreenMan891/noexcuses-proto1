@@ -1,5 +1,7 @@
 {
   "dependencies": {
+    "com.etdofresh.fishyeos": "https://github.com/ETdoFresh/FishyEOS.git?path=/FishNet/Plugins/FishyEOS",
+    "com.playeveryware.eos": "file:C:/Users/green/Downloads/com.playeveryware.eos-4.0.0.tgz",
     "com.unity.collab-proxy": "2.7.1",
     "com.unity.feature.development": "1.0.1",
     "com.unity.multiplayer.tools": "1.1.1",
