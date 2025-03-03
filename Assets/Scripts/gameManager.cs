@@ -9,6 +9,7 @@ using FishNet.Object.Synchronizing;
 using UnityEngine.UI;
 using UnityEditor;
 using UnityEngine.SocialPlatforms.Impl;
+using Unity.VisualScripting;
 
 
 public class GameManager : NetworkBehaviour
@@ -34,6 +35,10 @@ public class GameManager : NetworkBehaviour
 
     [SerializeField] private Transform[] spawnPoints;
 
+    public GameObject[] obstacles;
+    public int obstaclesPerType = 3;
+    public float spawnRange = 25f;
+
     public int player1Score = 0;
     public int player2Score = 0;
     private int currentRound = 0;
@@ -54,6 +59,12 @@ public class GameManager : NetworkBehaviour
     // matchmaking 
     // art style (cream white?)
     // sound effects 
+
+    public override void OnStartServer()
+    {
+        base.OnStartServer();
+    }
+
     private void Awake()
     {
         // Simple singleton pattern
@@ -178,9 +189,60 @@ public class GameManager : NetworkBehaviour
         loseImage.gameObject.SetActive(false);
     }
 
-    private void RandomizeObjects()
+    [ServerRpc(RequireOwnership = false)]
+    public void RandomizeObjects()
     {
-        //idk yet we will see
+        // for (int i = 0; i < obstacles.Length; i++)
+        // {
+        //     for (int j = 0; j < obstaclesPerType; j++)
+        //     {
+        //         Vector3 randomPos = new Vector3(Random.Range(-spawnRange, spawnRange), 0, Random.Range(-spawnRange, spawnRange));
+        //         Debug.Log("random pos: " + randomPos.ToString());
+        //         GameObject obstacleInstance = Instantiate(obstacles[i], randomPos, Quaternion.identity);
+
+        //         // **Spawn the object on the network**
+        //         ServerManager.Spawn(obstacleInstance);
+        //     }
+        // }
+
+        List<Vector3> positions = new List<Vector3>();
+        List<Quaternion> rotations = new List<Quaternion>();
+
+        // Generate 4 random positions on one side (from -35 to 0)
+        for (int i = 0; i < 4; i++)
+        {
+            Vector3 randomPos = new Vector3(Random.Range(-30, 30), 0, Random.Range(-30, -5));
+            Quaternion randomRot = Quaternion.Euler(0, Random.Range(0, 360), 0);
+            positions.Add(randomPos);
+            rotations.Add(randomRot);
+        }
+
+        // Mirror these positions to the other side (from 0 to 35)
+        for (int i = 0; i < 4; i++)
+        {
+            Vector3 mirroredPos = new Vector3(positions[i].x, positions[i].y, -positions[i].z);
+            Quaternion mirroredRot = new Quaternion(rotations[i].x, rotations[i].y + 180, rotations[i].z, rotations[i].w);
+            positions.Add(mirroredPos);
+            rotations.Add(mirroredRot);
+        }
+
+        // Instantiate obstacles at the generated positions
+        // for (int i = 0; i < obstacles.Length; i++)
+        // {s
+        for (int j = 0; j < positions.Count; j++)
+        {
+
+            Debug.Log("random pos: " + positions[j].ToString());
+            GameObject obstacleInstance;
+            if (j < 4) {
+                obstacleInstance = Instantiate(obstacles[Random.Range(0, obstacles.Length)], positions[j], rotations[j]);
+            }
+            else {
+                obstacleInstance = Instantiate(obstacles[j % obstacles.Length], positions[j], rotations[j]);
+            }
+            // **Spawn the object on the network**
+            ServerManager.Spawn(obstacleInstance);
+        }
     }
     // Example: Teleport players to designated starting spawn points if available.
     // if (spawnPoints != null && spawnPoints.Value.Length >= 2)

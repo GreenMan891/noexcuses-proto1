@@ -20,6 +20,8 @@ public class moveScript : NetworkBehaviour
     public LayerMask groundMask;
 
     private playerState playerState;
+    private bool hasSwitchedCam = false;
+    //[SerializeField] public GameObject titleScreen;
 
 
 
@@ -44,11 +46,18 @@ public class moveScript : NetworkBehaviour
             cam.gameObject.SetActive(true);
         }
         if (!playerState.IsAlive.Value && playerState != null) return;
+
+        if (!hasSwitchedCam)
+        {
+            switchCam();
+            //titleScreen.SetActive(false);
+            hasSwitchedCam = true;
+
+        }
+
         movePlayer();
         Jump();
     }
-
-
 
     void LateUpdate()
     {
@@ -62,6 +71,7 @@ public class moveScript : NetworkBehaviour
 
     public void switchCam()
     {
+        Debug.Log("Switching Camera");
         if (IsOwner)
         {
             var waitingCam = GameObject.Find("MenuCamera");
@@ -69,6 +79,10 @@ public class moveScript : NetworkBehaviour
             {
                 waitingCam.SetActive(false);
             }
+        }
+        else
+        {
+            Debug.Log("Not Owner");
         }
     }
 
