@@ -35,9 +35,9 @@ public class GameManager : NetworkBehaviour
 
     [SerializeField] private Transform[] spawnPoints;
 
+
     public GameObject[] obstacles;
-    public int obstaclesPerType = 3;
-    public float spawnRange = 25f;
+    public List<GameObject> spawnedObstacles = new List<GameObject>();
 
     public int player1Score = 0;
     public int player2Score = 0;
@@ -85,6 +85,7 @@ public class GameManager : NetworkBehaviour
         playerState winner = null;
         foreach (playerState player in players)
         {
+            player.IsAlive.Value = false;
             gamers.Add(player.gameObject);
             if (player != deadPlayer)
             {
@@ -175,6 +176,7 @@ public class GameManager : NetworkBehaviour
         removeWinImagery();
         Debug.Log($"Round {currentRound} starting...");
         playerState[] players = FindObjectsOfType<playerState>();
+        DestroyPreviousObstacles();
         RandomizeObjects();
         for (int i = 0; i < players.Length; i++)
         {
@@ -192,21 +194,11 @@ public class GameManager : NetworkBehaviour
     [ServerRpc(RequireOwnership = false)]
     public void RandomizeObjects()
     {
-        // for (int i = 0; i < obstacles.Length; i++)
-        // {
-        //     for (int j = 0; j < obstaclesPerType; j++)
-        //     {
-        //         Vector3 randomPos = new Vector3(Random.Range(-spawnRange, spawnRange), 0, Random.Range(-spawnRange, spawnRange));
-        //         Debug.Log("random pos: " + randomPos.ToString());
-        //         GameObject obstacleInstance = Instantiate(obstacles[i], randomPos, Quaternion.identity);
-
-        //         // **Spawn the object on the network**
-        //         ServerManager.Spawn(obstacleInstance);
-        //     }
-        // }
+        if (!IsServer) return;
 
         List<Vector3> positions = new List<Vector3>();
         List<Quaternion> rotations = new List<Quaternion>();
+
 
         // Generate 4 random positions on one side (from -35 to 0)
         for (int i = 0; i < 4; i++)
@@ -226,44 +218,36 @@ public class GameManager : NetworkBehaviour
             rotations.Add(mirroredRot);
         }
 
-        // Instantiate obstacles at the generated positions
-        // for (int i = 0; i < obstacles.Length; i++)
-        // {s
         for (int j = 0; j < positions.Count; j++)
         {
 
             Debug.Log("random pos: " + positions[j].ToString());
             GameObject obstacleInstance;
-            if (j < 4) {
+            if (j < 4)
+            {
                 obstacleInstance = Instantiate(obstacles[Random.Range(0, obstacles.Length)], positions[j], rotations[j]);
             }
-            else {
+            else
+            {
                 obstacleInstance = Instantiate(obstacles[j % obstacles.Length], positions[j], rotations[j]);
             }
             // **Spawn the object on the network**
             ServerManager.Spawn(obstacleInstance);
+            spawnedObstacles.Add(obstacleInstance);
         }
     }
-    // Example: Teleport players to designated starting spawn points if available.
-    // if (spawnPoints != null && spawnPoints.Value.Length >= 2)
-    // {   
-    // }
 
-    // Additional game-start logic (e.g., starting timers, enabling controls, etc.)
-
-
-    // [ServerRpc(RequireOwnership = false)]
-    // public void TeleportPlayer(NetworkObject playerObj, int spawnIndex)
-    // {
-    //     if (spawnPoints == null || spawnPoints.Length == 0) return;
-    //     if (spawnIndex < 0 || spawnIndex >= spawnPoints.Length) return;
-
-    //     if (players.Contains(playerObj.gameObject))
-    //     {
-    //         playerObj.GetComponent<NetworkTransform>().transform.position = spawnPoints[spawnIndex].position;
-    //         //transform.position = spawnPoints[spawnIndex].position;
-    //         Debug.Log($"Teleported {playerObj.gameObject.name} to spawn {spawnPoints[spawnIndex]}");
-    //         Debug.Log("current position of this player: " + playerObj.transform.position);
-    //     }
-    // }
+    [ServerRpc(RequireOwnership = false)]
+    private void DestroyPreviousObstacles()
+    {
+        if (!IsServer) return;
+        foreach (GameObject obstacle in spawnedObstacles)
+        {
+            if (obstacle != null)
+            {
+                Destroy(obstacle);
+            }
+        }
+        spawnedObstacles.Clear();
+    }
 }

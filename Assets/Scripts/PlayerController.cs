@@ -23,13 +23,14 @@ public class PlayerController : NetworkBehaviour
     {
         yield return new WaitForSeconds(1f);
         gameManager.RandomizeObjects();
+        titleScreen.SetActive(false);
     }
-    
+
 
     public void Start()
     {
         titleScreen.SetActive(true);
-        
+
     }
 
     [ServerRpc(RequireOwnership = false)]
@@ -38,6 +39,10 @@ public class PlayerController : NetworkBehaviour
         GameObject player = Instantiate(playerPrefab, spawnPoints[playersSpawned].position, Quaternion.identity);
         Spawn(player, client);
         playersSpawned++;
-        titleScreen.SetActive(false);
+        disableTitleScreen();
+    }
+    public void disableTitleScreen()
+    {
+
     }
 }
