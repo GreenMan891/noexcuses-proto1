@@ -22,6 +22,7 @@ public class playerState : NetworkBehaviour
     {
         if (!IsAlive.Value) return;
         IsAlive.Value = false;
+        moveScript.controller.enabled = false;
         Debug.Log($"{gameObject.name} is dead");
         GameManager.Instance.HandleRoundReset(this);
     }

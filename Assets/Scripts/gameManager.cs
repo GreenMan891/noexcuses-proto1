@@ -33,6 +33,11 @@ public class GameManager : NetworkBehaviour
     [SerializeField] private Sprite two;
     [SerializeField] private Sprite three;
 
+    [SerializeField] private Image countDown3;
+    [SerializeField] private Image countDown2;
+    [SerializeField] private Image countDown1;
+    [SerializeField] private Image countDownGo;
+
     [SerializeField] private Transform[] spawnPoints;
 
 
@@ -74,6 +79,11 @@ public class GameManager : NetworkBehaviour
             return;
         }
         Instance = this;
+        countDown3.gameObject.SetActive(false);
+        countDown2.gameObject.SetActive(false);
+
+        countDown1.gameObject.SetActive(false);
+        countDownGo.gameObject.SetActive(false);
     }
 
     [ServerRpc(RequireOwnership = false)]
@@ -178,9 +188,62 @@ public class GameManager : NetworkBehaviour
         playerState[] players = FindObjectsOfType<playerState>();
         DestroyPreviousObstacles();
         RandomizeObjects();
+        StartCoroutine(StartCountdown());
         for (int i = 0; i < players.Length; i++)
         {
             players[i].ResetPlayer(spawnPoints[i].position);
+        }
+        // add 3 2 1 countdown to the UI
+    }
+    private IEnumerator StartCountdown()
+    {
+        for (int i = 3; i > 0; i--)
+        {
+            Debug.Log("Countdown: " + i);
+            if (i == 3)
+            {
+                DisplayCountdown(3);
+                yield return new WaitForSeconds(1f);
+            }
+            else if (i == 2)
+            {
+                DisplayCountdown(2);
+                yield return new WaitForSeconds(1f);
+            }
+            else if (i == 1)
+            {
+                DisplayCountdown(1);
+                yield return new WaitForSeconds(1f);
+            }
+        }
+        DisplayCountdown(0);
+        yield return new WaitForSeconds(1f);
+        DisplayCountdown(4);
+    }
+
+    [ObserversRpc]
+    private void DisplayCountdown(int countdownValue)
+    {
+        switch (countdownValue)
+        {
+            case 3:
+                countDown3.gameObject.SetActive(true);
+                break;
+            case 2:
+                countDown2.gameObject.SetActive(true);
+                countDown3.gameObject.SetActive(false);
+                break;
+            case 1:
+                countDown1.gameObject.SetActive(true);
+                countDown2.gameObject.SetActive(false);
+                break;
+            case 0:
+                countDownGo.gameObject.SetActive(true);
+                countDown1.gameObject.SetActive(false);
+                break;
+            case 4:
+                countDownGo.gameObject.SetActive(false);
+                break;
         }
     }
 

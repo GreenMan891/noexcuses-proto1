@@ -8,7 +8,7 @@ public class shootScript : NetworkBehaviour
 {
     public Camera cam;
     RaycastHit bulletHit;
-    public GameObject bullet;
+    [SerializeField] private GameObject laserPrefab;
     public float fireRate = 400f;
     private bool canFire = true;
 

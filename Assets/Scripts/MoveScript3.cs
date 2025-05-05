@@ -1,14 +1,13 @@
-using System.Collections;
-using System.Collections.Generic;
 using FishNet.Object;
-using FishNet.Object.Synchronizing;
 using Q3Movement;
 using UnityEngine;
 
-public class moveScript : NetworkBehaviour
+[RequireComponent(typeof(CharacterController))]
+public class MoveScript3 : NetworkBehaviour
 {
-    public Transform orientation;
-    public Camera cam;
+
+    [Header("Camera Settings")]
+    public Camera playCamera;           // Reference to the camera transform
     private FirstPersonCameraRotation cameraRotation;
 
     [Header("Movement Settings")]
@@ -28,14 +27,7 @@ public class moveScript : NetworkBehaviour
 
     private Vector3 velocity = Vector3.zero;
     private Vector3 groundNormal = Vector3.up;
-    public CharacterController controller;
-
-    public playerState playerState;
-    private bool hasSwitchedCam = false;
-
-    float forward, strafe;
-    bool wishJump = false;
-    //[SerializeField] public GameObject titleScreen;
+    private CharacterController controller;
 
     void Awake()
     {
@@ -44,7 +36,6 @@ public class moveScript : NetworkBehaviour
         {
             cameraRotation = gameObject.AddComponent<FirstPersonCameraRotation>();
         }
-        playerState = GetComponent<playerState>();
     }
 
     public override void OnStartClient()
@@ -56,44 +47,24 @@ public class moveScript : NetworkBehaviour
             // Debug.Log("Camera assigned to player: " + playCamera.name);
             // playCamera.transform.position = transform.position;
             // playCamera.transform.SetParent(transform);
-            cameraRotation.Init(transform, cam.transform);
+            cameraRotation.Init(transform, playCamera.transform);
+        }
+        else
+        {
+            gameObject.GetComponent<MoveScript3>().enabled = false; // Disable the move script for non-local players // Disable the camera rotation for non-local players
         }
     }
-
     void Start()
     {
         controller = GetComponent<CharacterController>();
         controller.slopeLimit = slopeLimit;
+
+
     }
 
-    // Update is called once per frame
     void Update()
     {
-        if (!IsOwner)
-        {
-            cam.gameObject.SetActive(false);
-            return;
-        }
-        else
-        {
-            cam.gameObject.SetActive(true);
-        }
-        if (!playerState.IsAlive.Value && playerState != null) return;
-
-        if (!hasSwitchedCam)
-        {
-            switchCam();
-            //titleScreen.SetActive(false);
-            hasSwitchedCam = true;
-
-        }
-        Movement(); 
-        // movePlayer();
-        // Jump();
-    }
-
-    void Movement() {
-                // Update ground normal for slope handling
+        // Update ground normal for slope handling
         UpdateGroundNormal();
 
         // Input
@@ -146,9 +117,9 @@ public class moveScript : NetworkBehaviour
         // Move character
         controller.Move(velocity * Time.deltaTime);
 
-        if (cam != null)
+        if (playCamera != null)
         {
-            cameraRotation.LookRotation(transform, cam.transform);
+            cameraRotation.LookRotation(transform, playCamera.transform);
 
         }
     }
@@ -226,45 +197,4 @@ public class moveScript : NetworkBehaviour
             velocity.y = zVel;
         }
     }
-
-    public void switchCam()
-    {
-        Debug.Log("Switching Camera");
-        if (IsOwner)
-        {
-            var waitingCam = GameObject.Find("MenuCamera");
-            if (waitingCam != null)
-            {
-                waitingCam.SetActive(false);
-            }
-        }
-        else
-        {
-            Debug.Log("Not Owner");
-        }
-    }
-
-    [ObserversRpc]
-    public void ResetPlayer(Vector3 spawnPoint)
-    {
-        transform.position = spawnPoint;
-        velocity = Vector3.zero;
-        StartCoroutine(WaitAndEnableController(spawnPoint));
-    }
-
-    private IEnumerator WaitAndEnableController(Vector3 spawnPoint)
-    {
-        controller.enabled = false;
-        yield return new WaitForSeconds(3f);
-        controller.enabled = true;
-        transform.position = spawnPoint;
-    }
-
-    [ObserversRpc]
-    public void ResetLocation(Vector3 spawnPoint)
-    {
-        transform.position = spawnPoint;
-    }
-
-
 }
