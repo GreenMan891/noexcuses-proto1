@@ -33,6 +33,8 @@ public class moveScript : NetworkBehaviour
     public playerState playerState;
     private bool hasSwitchedCam = false;
 
+    public Animator animator;
+
     float forward, strafe;
     bool wishJump = false;
     //[SerializeField] public GameObject titleScreen;
@@ -98,7 +100,9 @@ public class moveScript : NetworkBehaviour
 
         // Input
         float forward = Input.GetAxisRaw("Vertical");
+        animator.SetFloat("ForwardInput", forward);
         float strafe = Input.GetAxisRaw("Horizontal");
+        animator.SetFloat("SideInput", strafe);
         bool wishJump = Input.GetButtonDown("Jump");
 
         Vector2 input = new Vector2(strafe, forward);
@@ -108,6 +112,8 @@ public class moveScript : NetworkBehaviour
         // Desired movement
         Vector3 wishDir = transform.forward * input.y + transform.right * input.x;
         float wishSpeed = input.magnitude * maxGroundSpeed;
+        animator.SetFloat("YVelocity", velocity.y);
+        animator.SetBool("grounded", controller.isGrounded);
 
         if (controller.isGrounded)
         {
@@ -124,6 +130,14 @@ public class moveScript : NetworkBehaviour
             if (wishJump)
             {
                 velocity.y = jumpVelocity;
+                if (input == Vector2.zero)
+                {
+                    animator.SetTrigger("JumpIdle");
+                }
+                else
+                {
+                animator.SetTrigger("JumpStart");
+                }
             }
             else if (velocity.y < 0)
             {

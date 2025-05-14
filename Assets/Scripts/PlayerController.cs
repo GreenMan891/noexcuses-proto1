@@ -14,7 +14,9 @@ public class PlayerController : NetworkBehaviour
 
     public override void OnStartClient()
     {
+        Debug.Log("Client started!!!!");
         base.OnStartNetwork();
+        Debug.Log("Client started");
         SpawnPlayer(Owner);
         StartCoroutine(WaitAndRandomizeObjects());
     }
@@ -46,3 +48,5 @@ public class PlayerController : NetworkBehaviour
 
     }
 }
+
+

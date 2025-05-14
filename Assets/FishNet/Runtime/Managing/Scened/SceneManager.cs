@@ -1154,12 +1154,18 @@
 //                         //Dispatch with total percent.
 //                         InvokeOnScenePercentChange(data, totalPercent);
 //                     }
-//
-//                     //Add to loaded scenes.
-//                     Scene loaded = UnitySceneManager.GetSceneAt(UnitySceneManager.sceneCount - 1);
-//                     loadedScenes.Add(loaded);
-//                     _sceneProcessor.AddLoadedScene(loaded);
+// 
+//                     Scene lastLoadedScene = _sceneProcessor.GetLastLoadedScene();
+//                     /* If the lastLoadedScene returns default
+//                      * then the user is overriding the sceneprocessor
+//                      * and has not setup use for this particular API. */
+//                     if (lastLoadedScene == default)
+//                         lastLoadedScene = UnitySceneManager.GetSceneAt(UnitySceneManager.sceneCount - 1);
+//                                             
+//                     loadedScenes.Add(lastLoadedScene);
+//                     _sceneProcessor.AddLoadedScene(lastLoadedScene);
 //                 }
+
 //                 //When all scenes are loaded invoke with 100% done.
 //                 InvokeOnScenePercentChange(data, 1f);
 //
@@ -2588,10 +2594,12 @@ namespace FishNet.Managing.Scened
         [Tooltip("True to move spawned objects visible to the client that are within an unloading scene. This ensures the objects are despawned on the client side rather than when the scene is destroyed.")]
         [SerializeField]
         private bool _moveClientObjects = true;
+
         /// <summary>
         /// Sets a new value for MoveClientObjects.
         /// </summary>
         public void SetMoveClientObjects(bool value) => _moveClientObjects = value;
+
         /// <summary>
         /// True to automatically set active scenes when loading and unloading scenes.
         /// </summary>
@@ -2688,19 +2696,7 @@ namespace FishNet.Managing.Scened
                 _sceneProcessor = gameObject.AddComponent<DefaultSceneProcessor>();
             _sceneProcessor.Initialize(this);
         }
-
-        private void Start()
-        {
-            //No need to unregister since managers are on the same object.
-            NetworkManager.ServerManager.OnRemoteConnectionState += ServerManager_OnRemoteConnectionState;
-            NetworkManager.ServerManager.OnServerConnectionState += ServerManager_OnServerConnectionState;
-            _clientManager.RegisterBroadcast<LoadScenesBroadcast>(OnLoadScenes);
-            _clientManager.RegisterBroadcast<UnloadScenesBroadcast>(OnUnloadScenes);
-            _serverManager.RegisterBroadcast<ClientScenesLoadedBroadcast>(OnClientLoadedScenes);
-            _serverManager.RegisterBroadcast<EmptyStartScenesBroadcast>(OnServerEmptyStartScenes);
-            _clientManager.RegisterBroadcast<EmptyStartScenesBroadcast>(OnClientEmptyStartScenes);
-        }
-
+        
         private void OnDestroy()
         {
             UnitySceneManager.sceneUnloaded -= SceneManager_SceneUnloaded;
@@ -2712,7 +2708,7 @@ namespace FishNet.Managing.Scened
         private void ServerManager_OnServerConnectionState(ServerConnectionStateArgs obj)
         {
             //If no servers are started.
-            if (!NetworkManager.ServerManager.AnyServerStarted())
+            if (!NetworkManager.ServerManager.IsAnyServerStarted())
                 ResetValues();
         }
 
@@ -2746,6 +2742,14 @@ namespace FishNet.Managing.Scened
         internal void InitializeOnce_Internal(NetworkManager manager)
         {
             NetworkManager = manager;
+            //No need to unregister since managers are on the same object.
+            NetworkManager.ServerManager.OnRemoteConnectionState += ServerManager_OnRemoteConnectionState;
+            NetworkManager.ServerManager.OnServerConnectionState += ServerManager_OnServerConnectionState;
+            _clientManager.RegisterBroadcast<LoadScenesBroadcast>(OnLoadScenes);
+            _clientManager.RegisterBroadcast<UnloadScenesBroadcast>(OnUnloadScenes);
+            _serverManager.RegisterBroadcast<ClientScenesLoadedBroadcast>(OnClientLoadedScenes);
+            _serverManager.RegisterBroadcast<EmptyStartScenesBroadcast>(OnServerEmptyStartScenes);
+            _clientManager.RegisterBroadcast<EmptyStartScenesBroadcast>(OnClientEmptyStartScenes);
         }
 
         /// <summary>
@@ -2906,7 +2910,7 @@ namespace FishNet.Managing.Scened
                 else
                     _pendingClientSceneChanges[conn] = pendingLoads;
             }
-    
+
             if (!Comparers.IsDefault(msg))
             {
                 foreach (SceneLookupData item in msg.SceneLookupDatas)
@@ -3572,10 +3576,15 @@ namespace FishNet.Managing.Scened
                         InvokeOnScenePercentChange(data, totalPercent);
                     }
 
-                    //Add to loaded scenes.
-                    Scene loaded = UnitySceneManager.GetSceneAt(UnitySceneManager.sceneCount - 1);
-                    loadedScenes.Add(loaded);
-                    _sceneProcessor.AddLoadedScene(loaded);
+                    Scene lastLoadedScene = _sceneProcessor.GetLastLoadedScene();
+                    /* If the lastLoadedScene returns default
+                     * then the user is overriding the sceneprocessor
+                     * and has not setup use for this particular API. */
+                    if (lastLoadedScene == default)
+                        lastLoadedScene = UnitySceneManager.GetSceneAt(UnitySceneManager.sceneCount - 1);
+                    
+                    loadedScenes.Add(lastLoadedScene);
+                    _sceneProcessor.AddLoadedScene(lastLoadedScene);
                 }
                 //When all scenes are loaded invoke with 100% done.
                 InvokeOnScenePercentChange(data, 1f);
@@ -3700,7 +3709,7 @@ namespace FishNet.Managing.Scened
                             Scene activeScene = UnitySceneManager.GetActiveScene();
                             setToFirstLookup |= (activeScene == GetMovedObjectsScene());
                         }
-                        
+
                         if (setToFirstLookup)
                             preferredActiveScene = sceneLoadData.GetFirstLookupScene();
                     }

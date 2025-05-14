@@ -296,8 +296,8 @@ MonoBehaviour:
   _addedNetworkObject: {fileID: 5177335726926451614}
   _networkObjectCache: {fileID: 5177335726926451614}
   cam: {fileID: 6965178955193403452}
-  bullet: {fileID: 8300452653392117123, guid: 17d15813e9eb9e34087737e17291045a, type: 3}
   fireRate: 1
+  linePrefab: {fileID: 3429267597944088123, guid: 851767f8e8e42684d89d032001369ad8, type: 3}
 --- !u!114 &5177335726926451614
 MonoBehaviour:
   m_ObjectHideFlags: 0
