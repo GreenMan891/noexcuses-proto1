@@ -12,6 +12,8 @@ public class playerState : NetworkBehaviour
     public moveScript moveScript;
 
     public GameObject headModel;
+
+    public Animator animator;
     public ParticleSystem headExplosionParticles;
     public GameObject bloodSplatDecalPrefab;
     public Color headColor = Color.red;
@@ -53,6 +55,7 @@ public class playerState : NetworkBehaviour
         if (!IsAlive.Value) return;
         IsAlive.Value = false;
         moveScript.controller.enabled = false;
+        animator.StopPlayback();
         HandleDeathEffects();
         Debug.Log($"{gameObject.name} is dead");
         GameManager.Instance.HandleRoundReset(this);
@@ -127,7 +130,7 @@ public class playerState : NetworkBehaviour
             {
                 GameObject splatDecal = Instantiate(bloodSplatDecalPrefab, hit.point + hit.normal * 0.01f, Quaternion.LookRotation(-hit.normal));
                 splatDecal.transform.Rotate(Vector3.forward, Random.Range(0f, 360f));
-                splatDecal.transform.localScale *= Random.Range(0.5f, 1.2f);
+                splatDecal.transform.localScale *= Random.Range(2.5f, 3.5f);
 
                 Renderer splatRenderer = splatDecal.GetComponent<Renderer>();
                 if (splatRenderer != null)
@@ -139,13 +142,63 @@ public class playerState : NetworkBehaviour
         }
     }
 
-    [ServerRpc(RequireOwnership = false)]
-    public void ResetPlayer(Vector3 spawnPoint)
+    [ObserversRpc]
+    public void RpcResetPlayerVisualsAndPosition(Vector3 spawnPoint)
     {
+        Debug.Log(gameObject.name + " Owner:" + IsOwner + ". Executing RpcResetPlayerVisualsAndPosition.");
+
         IsAlive.Value = true;
-        headModel.SetActive(true);
+
+        // 1. Reset Position (CharacterController needs to be temporarily disabled for direct transform.position set)
+        // bool controllerWasEnabled = false;
+        // if (controller != null)
+        // {
+        //     controllerWasEnabled = controller.enabled;
+        //     controller.enabled = false;
+        // }
+        // transform.position = spawnPoint;
+        // //transform.rotation = Quaternion.identity; // Or a default spawn rotation if needed
+        // if (controller != null && controllerWasEnabled) // Only re-enable if it was enabled before
+        // {
+        //     controller.enabled = true;
+        // }
+
+
+        // 2. Reset Visuals
+        if (headModel != null)
+        {
+            headModel.SetActive(true); // THIS IS THE FIX - runs on all clients
+            Debug.Log(gameObject.name + " Head model SetActive(true) on client. Owner: " + IsOwner);
+        }
+        else
+        {
+            Debug.LogWarning(gameObject.name + " Head model is null on client. Owner: " + IsOwner);
+        }
+
+        // 3. Re-enable player's own FPS camera if they are the owner
+        // if (IsOwner && playerCamera != null)
+        // {
+        //     playerCamera.gameObject.SetActive(true);
+        //     // Re-enable its AudioListener if it was disabled
+        //     if (playerCamera.TryGetComponent<AudioListener>(out var listener) && !listener.enabled)
+        //     {
+        //         listener.enabled = true;
+        //     }
+        // }
+        // If moveScript itself has an enabled flag for input processing:
+        // if (moveScript != null) moveScript.enabled = IsOwner;
+
         moveScript.ResetPlayer(spawnPoint);
     }
+
+
+    // [ServerRpc(RequireOwnership = false)]
+    // public void ResetPlayer(Vector3 spawnPoint)
+    // {
+    //     IsAlive.Value = true;
+    //     headModel.SetActive(true);
+    //     moveScript.ResetPlayer(spawnPoint);
+    // }
 
 
 }

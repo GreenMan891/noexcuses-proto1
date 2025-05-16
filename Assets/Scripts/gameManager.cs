@@ -1,6 +1,5 @@
 using System.Collections;
 using System.Collections.Generic;
-using FishNet.Example.Scened;
 using FishNet.Object;
 using FishNet.Connection;
 using UnityEngine;
@@ -10,6 +9,9 @@ using UnityEngine.UI;
 using UnityEditor;
 using UnityEngine.SocialPlatforms.Impl;
 using Unity.VisualScripting;
+using UnityEngine.SceneManagement;
+using FishNet.Managing.Scened;
+using FishNet.Managing;
 
 
 public class GameManager : NetworkBehaviour
@@ -27,6 +29,8 @@ public class GameManager : NetworkBehaviour
 
     [SerializeField] private Image winImage;
     [SerializeField] private Image loseImage;
+    [SerializeField] private Image finalWinImage;
+    [SerializeField] private Image finalLoseImage;
 
     [SerializeField] private Sprite none;
     [SerializeField] private Sprite one;
@@ -39,14 +43,18 @@ public class GameManager : NetworkBehaviour
     [SerializeField] private Image countDownGo;
 
     [SerializeField] private Transform[] spawnPoints;
-
-
     public GameObject[] obstacles;
     public List<GameObject> spawnedObstacles = new List<GameObject>();
 
+    public NetworkManager networkManager;
+
+    [SerializeField] private int scoreToWin = 3;
+    [SerializeField] private float delayBeforeTitleScreen = 2f;
+    [SerializeField] private string titleSceneName = "TitleScene";
     public int player1Score = 0;
     public int player2Score = 0;
     private int currentRound = 0;
+    private bool gameOver = false;
 
 
 
@@ -84,12 +92,14 @@ public class GameManager : NetworkBehaviour
 
         countDown1.gameObject.SetActive(false);
         countDownGo.gameObject.SetActive(false);
+        if (finalWinImage) finalWinImage.gameObject.SetActive(false); // Match win
+        if (finalLoseImage) finalLoseImage.gameObject.SetActive(false); // Match lose
     }
 
     [ServerRpc(RequireOwnership = false)]
     public void HandleRoundReset(playerState deadPlayer)
     {
-        if (!IsServer) return;
+        if (!IsServer || gameOver) return;
         Debug.Log("about to run round reset");
         playerState[] players = FindObjectsOfType<playerState>();
         playerState winner = null;
@@ -109,7 +119,10 @@ public class GameManager : NetworkBehaviour
             Debug.Log($"{winner.gameObject.name} wins the round!");
             AddWinImage(winner.Owner.ClientId);
         }
-        StartCoroutine(DelayedReset());
+        if (!gameOver) // Only reset round if game isn't over
+        {
+            StartCoroutine(DelayedReset());
+        }
     }
 
     private IEnumerator DelayedReset()
@@ -121,16 +134,37 @@ public class GameManager : NetworkBehaviour
     [ServerRpc(RequireOwnership = false)]
     private void IncreaseScore(playerState winner)
     {
+        if (!IsServer || gameOver) return;
+        bool gameShouldEnd = false;
+        int winningClientId = -1;
+
         if (winner.Owner.ClientId == 0)
         {
             player1Score++;
+            if (player1Score >= scoreToWin)
+            {
+                gameShouldEnd = true;
+                winningClientId = 0;
+            }
         }
         else
         {
             player2Score++;
+            if (player2Score >= scoreToWin)
+            {
+                gameShouldEnd = true;
+                winningClientId = 1;
+            }
         }
         ChangePlayerScores(player1Score, player2Score);
         Debug.Log($"Player 1: {player1Score} Player 2: {player2Score}");
+
+        if (gameShouldEnd)
+        {
+            Debug.Log($"Game Over. ClientId {winningClientId} wins.");
+            gameOver = true;
+            RpcHandleGameOver(winningClientId);
+        }
     }
 
     [ObserversRpc]
@@ -144,7 +178,7 @@ public class GameManager : NetworkBehaviour
         {
             player1ScoreImage.sprite = two;
         }
-        else if (score1 == 3)
+        else if (score1 >= 3)
         {
             player1ScoreImage.sprite = three;
         }
@@ -156,7 +190,7 @@ public class GameManager : NetworkBehaviour
         {
             player2ScoreImage.sprite = two;
         }
-        else if (score2 == 3)
+        else if (score2 >= 3)
         {
             player2ScoreImage.sprite = three;
         }
@@ -177,11 +211,63 @@ public class GameManager : NetworkBehaviour
         }
 
     }
+    [ObserversRpc]
+    private void RpcHandleGameOver(int winningClientId)
+    {
+        gameOver = true;
+        if (winImage) winImage.gameObject.SetActive(false);
+        if (loseImage) loseImage.gameObject.SetActive(false);
+        if (NetworkManager.ClientManager.Connection.ClientId== winningClientId)
+        {
+            finalWinImage.gameObject.SetActive(true);
+            finalLoseImage.gameObject.SetActive(false);
+        }
+        else
+        {
+            finalWinImage.gameObject.SetActive(false);
+            finalLoseImage.gameObject.SetActive(true);
+        }
+        StartCoroutine(DelayedReturnToTitle());
+    }
+
+    private IEnumerator DelayedReturnToTitle()
+    {
+        yield return new WaitForSeconds(delayBeforeTitleScreen);
+
+        if (finalWinImage) finalWinImage.gameObject.SetActive(false);
+        if (finalLoseImage) finalLoseImage.gameObject.SetActive(false);
+
+        if (IsClient)
+        {
+            ClientManager.StopConnection();
+        }
+        if (IsServer)
+        {
+            ServerManager.StopConnection(true);
+            player1Score = 0;
+            player2Score = 0;
+            currentRound = 0;
+            gameOver = false;
+        }
+        SteamLobby steamLobby = FindObjectOfType<SteamLobby>();
+        if (steamLobby != null)
+        {
+            steamLobby.LeaveCurrentLobby(); // This also stops FishNet connections
+        }
+        else
+        {
+            Debug.LogWarning("SteamLobby instance not found when trying to return to title.");
+        }
+        Cursor.lockState = CursorLockMode.None;
+        Cursor.visible = true;
+        UnityEngine.SceneManagement.SceneManager.LoadScene(titleSceneName);
+    }
 
 
     [ServerRpc(RequireOwnership = false)]
     private void ResetRound()
     {
+        if (!IsServer || gameOver) return;
         currentRound++;
         removeWinImagery();
         Debug.Log($"Round {currentRound} starting...");
@@ -191,7 +277,7 @@ public class GameManager : NetworkBehaviour
         StartCoroutine(StartCountdown());
         for (int i = 0; i < players.Length; i++)
         {
-            players[i].ResetPlayer(spawnPoints[i].position);
+            players[i].RpcResetPlayerVisualsAndPosition(spawnPoints[i].position);
         }
         // add 3 2 1 countdown to the UI
     }

@@ -5040,7 +5040,7 @@ Transform:
   m_GameObject: {fileID: 3381210765070663238}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0.05189475, z: -0, w: 0.99865264}
-  m_LocalPosition: {x: 0.06000001, y: 3.9550529, z: 0.4}
+  m_LocalPosition: {x: 0.071, y: 3.9550529, z: 0.296}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -5140,7 +5140,7 @@ Transform:
   m_GameObject: {fileID: 3440072240890291130}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0.057, y: 4.724, z: 0.264}
+  m_LocalPosition: {x: 0.057, y: 4.724, z: 0.295}
   m_LocalScale: {x: 1.23, y: 1.23, z: 1.23}
   m_ConstrainProportionsScale: 1
   m_Children: []
@@ -5415,6 +5415,7 @@ MonoBehaviour:
   _networkObjectCache: {fileID: 3769222777535240466}
   moveScript: {fileID: 2535649754114597022}
   headModel: {fileID: 7300331176525405620}
+  animator: {fileID: 7265142904557815284}
   headExplosionParticles: {fileID: 1373478931178652278, guid: 6615066828b24b747bf77ad25f314f6f, type: 3}
   bloodSplatDecalPrefab: {fileID: 6610817967108722596, guid: dd56f179aed618c4091349788c2ab9e2, type: 3}
   headColor: {r: 1, g: 0, b: 0, a: 1}
@@ -5487,11 +5488,11 @@ MonoBehaviour:
   _networkObjectCache: {fileID: 3769222777535240466}
   orientation: {fileID: 7372345490746404638}
   cam: {fileID: 8530534641043172811}
-  maxSpeed: 8
-  maxGroundSpeed: 12
-  groundAcceleration: 9
-  airAcceleration: 1
-  airControl: 10
+  maxSpeed: 9
+  maxGroundSpeed: 14
+  groundAcceleration: 12
+  airAcceleration: 1.5
+  airControl: 12
   friction: 6
   gravity: 20
   jumpVelocity: 9
@@ -11428,7 +11429,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 919132149155446097, guid: abaa575ac5962b3478c7f1712add3e65, type: 3}
       propertyPath: m_IsActive
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 953231254977285747, guid: abaa575ac5962b3478c7f1712add3e65, type: 3}
       propertyPath: m_Layer
@@ -11766,6 +11767,10 @@ PrefabInstance:
       propertyPath: m_UpdateWhenOffscreen
       value: 1
       objectReference: {fileID: 0}
+    - target: {fileID: 6302504123489860836, guid: abaa575ac5962b3478c7f1712add3e65, type: 3}
+      propertyPath: m_Materials.Array.data[0]
+      value: 
+      objectReference: {fileID: 4638008192267078544, guid: b6adae0223ee7b44da63496dbadf1dc3, type: 3}
     - target: {fileID: 6376016713824872055, guid: abaa575ac5962b3478c7f1712add3e65, type: 3}
       propertyPath: m_Layer
       value: 9

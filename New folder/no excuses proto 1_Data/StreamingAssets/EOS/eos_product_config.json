@@ -1,0 +1,38 @@
+{
+  "ProductName": "No excuses",
+  "ProductId": "4d4df54a4745457e8aad2608725154cd",
+  "ProductVersion": "1",
+  "imported": true,
+  "Clients": [
+    {
+      "Value": {
+        "ClientId": null,
+        "ClientSecret": null,
+        "EncryptionKey": "7F0C1B211AD49F16D061F24990BB54BCF7E4A3ED521011356274B85054E2EC98"
+      },
+      "Name": "Client"
+    }
+  ],
+  "Environments": {
+    "Deployments": [
+      {
+        "Value": {
+          "SandboxId": {
+            "Value": "c4192b4aec3d42e4806d24a82c068623"
+          },
+          "DeploymentId": "8e2c44a26d8741859c5f404eb9f6e1dd"
+        },
+        "Name": "Deployment"
+      }
+    ],
+    "Sandboxes": [
+      {
+        "Value": {
+          "Value": "c4192b4aec3d42e4806d24a82c068623"
+        },
+        "Name": "Sandbox"
+      }
+    ]
+  },
+  "schemaVersion": "1.0"
+}

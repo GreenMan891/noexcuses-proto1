@@ -17,7 +17,8 @@ public class PlayerController : NetworkBehaviour
         Debug.Log("Client started!!!!");
         base.OnStartNetwork();
         Debug.Log("Client started");
-        SpawnPlayer(Owner);
+
+        StartCoroutine(WaitAndSpawnPlayer(Owner));
         StartCoroutine(WaitAndRandomizeObjects());
     }
 
@@ -25,14 +26,18 @@ public class PlayerController : NetworkBehaviour
     {
         yield return new WaitForSeconds(1f);
         gameManager.RandomizeObjects();
-        titleScreen.SetActive(false);
     }
 
 
     public void Start()
     {
-        titleScreen.SetActive(true);
 
+    }
+
+    private IEnumerator WaitAndSpawnPlayer(NetworkConnection Owner = null)
+    {
+        yield return null;
+        SpawnPlayer(Owner);
     }
 
     [ServerRpc(RequireOwnership = false)]
@@ -41,11 +46,6 @@ public class PlayerController : NetworkBehaviour
         GameObject player = Instantiate(playerPrefab, spawnPoints[playersSpawned].position, Quaternion.identity);
         Spawn(player, client);
         playersSpawned++;
-        disableTitleScreen();
-    }
-    public void disableTitleScreen()
-    {
-
     }
 }
 

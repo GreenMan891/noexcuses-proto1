@@ -106,7 +106,7 @@ public class shootScript : NetworkBehaviour
         Vector3 serverEndPoint;
         RaycastHit bulletHit; // Keep hit info local to server method
 
-        Vector3 adjustedOrigin = origin + direction * 0.5f + shooter.transform.right * 0.3f; // Move the origin 0.3 units forward and 0.3 units to the right
+        Vector3 adjustedOrigin = origin + direction * 0.5f; // Move the origin 0.3 units forward and 0.3 units to the right
         Ray ray = new Ray(adjustedOrigin, direction);
         bool didHit = Physics.Raycast(ray, out bulletHit, raycastDistance);
 

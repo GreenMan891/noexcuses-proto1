@@ -2,6 +2,8 @@ using FishNet;
 using FishNet.Object;
 using UnityEngine;
 using System.Collections;
+using FishNet.Managing;
+using Steamworks;
 
 public class ClientServerScript : NetworkBehaviour
 {
