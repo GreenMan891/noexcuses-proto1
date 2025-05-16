@@ -15,15 +15,15 @@ public class SteamLobby : MonoBehaviour
 
     private CSteamID currentLobbyID;
 
-    private string MY_GAME_ID = "noExcusesGame"; // This should be unique to your game
+    private string MY_GAME_ID = "noExcusesGame";
     private bool isHost;
     private List<CSteamID> foundLobbies = new List<CSteamID>();
     public const int MAX_PLAYERS = 2;
 
-    public static event Action<string> OnStatusUpdate; // For general status messages
-    public static event Action<bool> OnLobbyOperationFinished; // True if successfully in a lobby, false if failed/no lobby
-    public static event Action<int, int> OnPlayerCountChanged; // currentPlayers, maxPlayers
-    public static event Action OnReadyToStartGame; // When 2 players are in
+    public static event Action<string> OnStatusUpdate;
+    public static event Action<bool> OnLobbyOperationFinished; 
+    public static event Action<int, int> OnPlayerCountChanged; 
+    public static event Action OnReadyToStartGame; 
 
     public bool IsInLobby => currentLobbyID != CSteamID.Nil && currentLobbyID.IsValid();
     public bool IsHost => isHost;
@@ -35,29 +35,16 @@ public class SteamLobby : MonoBehaviour
     protected Callback<GameLobbyJoinRequested_t> gameLobbyJoinRequested;
     protected Callback<LobbyEnter_t> lobbyEntered;
     protected Callback<LobbyMatchList_t> lobbyMatchList;
-    protected Callback<LobbyDataUpdate_t> lobbyDataUpdate; // For lobby metadata changes
-    protected Callback<LobbyChatUpdate_t> lobbyChatUpdate; // For player join/leave
+    protected Callback<LobbyDataUpdate_t> lobbyDataUpdate;
+    protected Callback<LobbyChatUpdate_t> lobbyChatUpdate; 
 
-
-
-
-
-    // Start is called before the first frame update
+  
     void Awake()
     {
         Debug.Log("[SteamLobby] Awake STARTING.");
         DontDestroyOnLoad(gameObject);
 
         StartCoroutine(InitializeSteamSystems());
-
-        // hostButton.onClick.AddListener(() =>
-        // {
-        //     hostButton.gameObject.SetActive(false);
-        //     joinButton.gameObject.SetActive(false);
-        //     lobbyIdInput.gameObject.SetActive(false);
-        //     CreateSteamLobby();
-        // });
-        // if (joinButton && lobbyIdInput) joinButton.onClick.AddListener(() => JoinSteamLobby(lobbyIdInput.text));
     }
 
     private IEnumerator InitializeSteamSystems()
@@ -86,11 +73,10 @@ public class SteamLobby : MonoBehaviour
         lobbyDataUpdate = Callback<LobbyDataUpdate_t>.Create(OnLobbyDataUpdated);
         lobbyChatUpdate = Callback<LobbyChatUpdate_t>.Create(OnLobbyChatUpdated);
 
-        steamLobbyCoreInitialized = true; // Mark as initialized
+        steamLobbyCoreInitialized = true;
         Debug.Log("[SteamLobby] Core systems initialized and callbacks registered.");
     }
 
-    // Update is called once per frame
     void Update()
     {
         if (SteamManager.Initialized)
@@ -107,18 +93,13 @@ public class SteamLobby : MonoBehaviour
         OnStatusUpdate?.Invoke("Searching for available lobbies...");
         foundLobbies.Clear();
 
-        SteamMatchmaking.AddRequestLobbyListResultCountFilter(50); // Limit to 50 results for safety
+        SteamMatchmaking.AddRequestLobbyListResultCountFilter(50); 
 
         SteamMatchmaking.RequestLobbyList();
 
 
         
-
-        // ADD FILTERS FOR YOUR GAME
         SteamMatchmaking.AddRequestLobbyListStringFilter("GameID", MY_GAME_ID, ELobbyComparison.k_ELobbyComparisonEqual);
-        // SteamMatchmaking.AddRequestLobbyListNumericalFilter("slots_available", 1, ELobbyComparison.k_ELobbyComparisonEqualToOrGreaterThan);
-        // You might want to limit the number of results to avoid too many callbacks if many test lobbies exist
-        // SteamMatchmaking.AddRequestLobbyListResultCountFilter(10); // Get up to 10 results
         SteamMatchmaking.RequestLobbyList();
 
 
@@ -126,7 +107,7 @@ public class SteamLobby : MonoBehaviour
     public void CreateSteamLobby()
     {
         OnStatusUpdate?.Invoke("No suitable lobbies found. Creating a new lobby...");
-        SteamMatchmaking.CreateLobby(ELobbyType.k_ELobbyTypePublic, MAX_PLAYERS); // Or k_ELobbyTypePublic, max members
+        SteamMatchmaking.CreateLobby(ELobbyType.k_ELobbyTypePublic, MAX_PLAYERS); 
     }
 
     private void OnLobbyMatchList(LobbyMatchList_t callback)
@@ -151,8 +132,7 @@ public class SteamLobby : MonoBehaviour
 
         if (foundLobbies.Count > 0)
         {
-            // Join the first suitable lobby found
-            CSteamID lobbyToJoin = foundLobbies[0]; // Simplistic: join the first one
+            CSteamID lobbyToJoin = foundLobbies[0]; 
             OnStatusUpdate?.Invoke($"Attempting to join lobby: {lobbyToJoin}...");
             SteamMatchmaking.JoinLobby(lobbyToJoin);
         }
@@ -161,28 +141,6 @@ public class SteamLobby : MonoBehaviour
             CreateSteamLobby();
         }
     }
-
-
-
-    // public void JoinSteamLobby(string lobbyIdString)
-    // {
-    //     if (string.IsNullOrEmpty(lobbyIdString))
-    //     {
-    //         Debug.LogWarning("Lobby ID input is empty.");
-    //         return;
-    //     }
-
-    //     if (ulong.TryParse(lobbyIdString, out ulong lobbyIdUlong))
-    //     {
-    //         CSteamID lobbyID = new CSteamID(lobbyIdUlong);
-    //         Debug.Log($"Joining lobby {lobbyID}...");
-    //         SteamMatchmaking.JoinLobby(lobbyID);
-    //     }
-    //     else
-    //     {
-    //         Debug.LogError("Invalid Lobby ID format.");
-    //     }
-    // }
 
     private void OnLobbyCreated(LobbyCreated_t callback)
     {
@@ -198,9 +156,9 @@ public class SteamLobby : MonoBehaviour
 
         SteamMatchmaking.SetLobbyData(currentLobbyID, "HostAddress", SteamUser.GetSteamID().ToString());
         SteamMatchmaking.SetLobbyData(currentLobbyID, "name", $"{SteamFriends.GetPersonaName()}'s Game");
-        SteamMatchmaking.SetLobbyData(currentLobbyID, "GameID", MY_GAME_ID); // ADD THIS
+        SteamMatchmaking.SetLobbyData(currentLobbyID, "GameID", MY_GAME_ID); 
         SteamMatchmaking.SetLobbyData(currentLobbyID, "name", $"{SteamFriends.GetPersonaName()}'s Lobby");
-        SteamMatchmaking.SetLobbyJoinable(currentLobbyID, true); // Make sure it's joinable
+        SteamMatchmaking.SetLobbyJoinable(currentLobbyID, true);
 
         string actualName = SteamMatchmaking.GetLobbyData(currentLobbyID, "name");
         string actualGameId = SteamMatchmaking.GetLobbyData(currentLobbyID, "GameID");
@@ -209,10 +167,7 @@ public class SteamLobby : MonoBehaviour
 
         isHost = true;
 
-        // Start FishNet server
         networkManager.ServerManager.StartConnection();
-        // Host also connects as a client
-        // FishySteamworks will use the Steam P2P connection to the "HostAddress" (which is self)
         networkManager.ClientManager.StartConnection(SteamUser.GetSteamID().ToString());
     }
 
@@ -233,9 +188,8 @@ public class SteamLobby : MonoBehaviour
         OnPlayerCountChanged?.Invoke(CurrentLobbyPlayerCount, MAX_PLAYERS);
         OnLobbyOperationFinished?.Invoke(true);
 
-        if (!isHost) // If we are not the host, we are a client joining
+        if (!isHost)
         {
-            // Get the host's SteamID from lobby data
             string hostAddress = SteamMatchmaking.GetLobbyData(currentLobbyID, "HostAddress");
             if (string.IsNullOrEmpty(hostAddress))
             {
@@ -244,8 +198,6 @@ public class SteamLobby : MonoBehaviour
                 LeaveCurrentLobby();
                 return;
             }
-            // Start FishNet client, connecting to the host via their SteamID
-            // FishySteamworks will handle translating this SteamID to a P2P connection.
             OnStatusUpdate?.Invoke("Connecting to host...");
             networkManager.ClientManager.StartConnection(hostAddress);
         }
@@ -257,26 +209,22 @@ public class SteamLobby : MonoBehaviour
 
     private void OnLobbyDataUpdated(LobbyDataUpdate_t callback)
     {
-        // This callback is triggered when lobby data is changed.
-        // We can use this to react to custom game state changes if needed.
-        // For player count, LobbyChatUpdate is more direct for join/leave.
         if (callback.m_ulSteamIDLobby == currentLobbyID.m_SteamID)
         {
             Debug.Log("Lobby data updated.");
-            // Potentially refresh lobby info or player list if you display it
         }
     }
 
     private void OnLobbyChatUpdated(LobbyChatUpdate_t callback)
     {
-        // This callback is triggered when a user joins, leaves, is kicked, or disconnected from the lobby.
+
         if (callback.m_ulSteamIDLobby == currentLobbyID.m_SteamID)
         {
             Debug.Log($"Lobby chat update: User {callback.m_ulSteamIDUserChanged} status changed to {callback.m_rgfChatMemberStateChange}.");
             CurrentLobbyPlayerCount = SteamMatchmaking.GetNumLobbyMembers(currentLobbyID);
             OnPlayerCountChanged?.Invoke(CurrentLobbyPlayerCount, MAX_PLAYERS);
 
-            if (isHost) // Only host decides when to start
+            if (isHost)
             {
                 CheckPlayerCountAndReady();
             }
@@ -289,8 +237,6 @@ public class SteamLobby : MonoBehaviour
         {
             OnStatusUpdate?.Invoke("Lobby full! Starting game...");
             OnReadyToStartGame?.Invoke();
-            // Optionally, make the lobby not joinable anymore if the game is starting
-            // SteamMatchmaking.SetLobbyJoinable(currentLobbyID, false);
         }
         else
         {
@@ -300,17 +246,7 @@ public class SteamLobby : MonoBehaviour
 
 
 
-    // private void OnLobbyMatchList(LobbyMatchList_t pCallback)
-    // {
-    //     Debug.Log($"Found {pCallback.m_nLobbiesMatching} lobbies.");
-    //     for (int i = 0; i < pCallback.m_nLobbiesMatching; i++)
-    //     {
-    //         CSteamID lobbyID = SteamMatchmaking.GetLobbyByIndex(i);
-    //         string lobbyName = SteamMatchmaking.GetLobbyData(lobbyID, "name");
-    //         Debug.Log($"Lobby {i}: ID={lobbyID}, Name='{lobbyName}'");
-    //         // You would populate a UI list here
-    //     }
-    // }
+
     public void LeaveCurrentLobby()
     {
         if (IsInLobby)
@@ -318,10 +254,10 @@ public class SteamLobby : MonoBehaviour
             OnStatusUpdate?.Invoke($"Leaving lobby: {currentLobbyID}");
             Debug.Log($"Leaving lobby: {currentLobbyID}");
             SteamMatchmaking.LeaveLobby(currentLobbyID);
-            currentLobbyID = CSteamID.Nil; // Clear current lobby ID
+            currentLobbyID = CSteamID.Nil;
             isHost = false;
             CurrentLobbyPlayerCount = 0;
-            OnPlayerCountChanged?.Invoke(0, MAX_PLAYERS); // Update count
+            OnPlayerCountChanged?.Invoke(0, MAX_PLAYERS); 
         }
 
         if (networkManager != null)
@@ -335,7 +271,7 @@ public class SteamLobby : MonoBehaviour
                 networkManager.ClientManager.StopConnection();
             }
         }
-        OnLobbyOperationFinished?.Invoke(false); // Indicate we are no longer in a lobby ready state
+        OnLobbyOperationFinished?.Invoke(false); 
     }
 
     private void OnApplicationQuit()

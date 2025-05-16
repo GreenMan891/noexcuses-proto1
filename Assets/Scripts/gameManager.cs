@@ -203,6 +203,7 @@ public class GameManager : NetworkBehaviour
         {
             winImage.gameObject.SetActive(true);
             loseImage.gameObject.SetActive(false);
+
         }
         else
         {
@@ -217,7 +218,7 @@ public class GameManager : NetworkBehaviour
         gameOver = true;
         if (winImage) winImage.gameObject.SetActive(false);
         if (loseImage) loseImage.gameObject.SetActive(false);
-        if (NetworkManager.ClientManager.Connection.ClientId== winningClientId)
+        if (NetworkManager.ClientManager.Connection.ClientId == winningClientId)
         {
             finalWinImage.gameObject.SetActive(true);
             finalLoseImage.gameObject.SetActive(false);
@@ -279,7 +280,6 @@ public class GameManager : NetworkBehaviour
         {
             players[i].RpcResetPlayerVisualsAndPosition(spawnPoints[i].position);
         }
-        // add 3 2 1 countdown to the UI
     }
     private IEnumerator StartCountdown()
     {
@@ -349,7 +349,6 @@ public class GameManager : NetworkBehaviour
         List<Quaternion> rotations = new List<Quaternion>();
 
 
-        // Generate 4 random positions on one side (from -35 to 0)
         for (int i = 0; i < 4; i++)
         {
             Vector3 randomPos = new Vector3(Random.Range(-30, 30), 0, Random.Range(-30, -5));
@@ -358,7 +357,6 @@ public class GameManager : NetworkBehaviour
             rotations.Add(randomRot);
         }
 
-        // Mirror these positions to the other side (from 0 to 35)
         for (int i = 0; i < 4; i++)
         {
             Vector3 mirroredPos = new Vector3(positions[i].x, positions[i].y, -positions[i].z);

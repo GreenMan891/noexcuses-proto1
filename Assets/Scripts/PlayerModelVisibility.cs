@@ -30,11 +30,8 @@ public class PlayerModelVisibility : NetworkBehaviour
 
     public void UpdateHeadColour()
     {
-        // Wait until the client manager and connection are ready
         if (!IsClient || ClientManager == null || !ClientManager.Started || ClientManager.Connection == null || ClientManager.Connection.FirstObject == null)
         {
-            // Too early to get local player info, try again shortly
-            // Invoke(nameof(UpdateHeadColor), 0.1f); // Or use a coroutine
             return;
         }
         headRenderer.material = IsOwner ? friendlyHeadMaterial : enemyHeadMaterial;

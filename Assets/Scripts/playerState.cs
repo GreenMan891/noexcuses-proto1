@@ -123,7 +123,7 @@ public class playerState : NetworkBehaviour
         {
             Debug.Log("Spawning blood splat");
             Vector3 randomDir = Random.onUnitSphere;
-            randomDir.y = Mathf.Abs(randomDir.y) * 0.5f; // Ensure it's not too vertical
+            randomDir.y = Mathf.Abs(randomDir.y) * 0.5f;
             RaycastHit hit;
             int layerMask = LayerMask.GetMask("Default", "Environment");
             if (Physics.Raycast(origin, randomDir, out hit, splatterRadius, layerMask))
@@ -135,9 +135,9 @@ public class playerState : NetworkBehaviour
                 Renderer splatRenderer = splatDecal.GetComponent<Renderer>();
                 if (splatRenderer != null)
                 {
-                    splatRenderer.material.color = colorToUse; // Set blood color
+                    splatRenderer.material.color = colorToUse; 
                 }
-                Destroy(splatDecal, 5f); // Destroy after 5 seconds
+                Destroy(splatDecal, 5f);
             }
         }
     }
@@ -149,25 +149,10 @@ public class playerState : NetworkBehaviour
 
         IsAlive.Value = true;
 
-        // 1. Reset Position (CharacterController needs to be temporarily disabled for direct transform.position set)
-        // bool controllerWasEnabled = false;
-        // if (controller != null)
-        // {
-        //     controllerWasEnabled = controller.enabled;
-        //     controller.enabled = false;
-        // }
-        // transform.position = spawnPoint;
-        // //transform.rotation = Quaternion.identity; // Or a default spawn rotation if needed
-        // if (controller != null && controllerWasEnabled) // Only re-enable if it was enabled before
-        // {
-        //     controller.enabled = true;
-        // }
 
-
-        // 2. Reset Visuals
         if (headModel != null)
         {
-            headModel.SetActive(true); // THIS IS THE FIX - runs on all clients
+            headModel.SetActive(true);
             Debug.Log(gameObject.name + " Head model SetActive(true) on client. Owner: " + IsOwner);
         }
         else
@@ -175,30 +160,7 @@ public class playerState : NetworkBehaviour
             Debug.LogWarning(gameObject.name + " Head model is null on client. Owner: " + IsOwner);
         }
 
-        // 3. Re-enable player's own FPS camera if they are the owner
-        // if (IsOwner && playerCamera != null)
-        // {
-        //     playerCamera.gameObject.SetActive(true);
-        //     // Re-enable its AudioListener if it was disabled
-        //     if (playerCamera.TryGetComponent<AudioListener>(out var listener) && !listener.enabled)
-        //     {
-        //         listener.enabled = true;
-        //     }
-        // }
-        // If moveScript itself has an enabled flag for input processing:
-        // if (moveScript != null) moveScript.enabled = IsOwner;
 
         moveScript.ResetPlayer(spawnPoint);
     }
-
-
-    // [ServerRpc(RequireOwnership = false)]
-    // public void ResetPlayer(Vector3 spawnPoint)
-    // {
-    //     IsAlive.Value = true;
-    //     headModel.SetActive(true);
-    //     moveScript.ResetPlayer(spawnPoint);
-    // }
-
-
 }

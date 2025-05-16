@@ -10,7 +10,6 @@ using FishNet.Managing.Scened;
 
 public class TitleScreenManager : MonoBehaviour
 {
-    // Start is called before the first frame update
     [SerializeField] private TextMeshProUGUI titleText;
     [SerializeField] private Button playButton;
     [SerializeField] private TextMeshProUGUI statusText;
@@ -102,12 +101,6 @@ public class TitleScreenManager : MonoBehaviour
         }
 
     }
-    // private void StartGame() {
-    //     if (steamLobby.IsInLobby) {
-    //         UpdateStatusText("Starting game...");
-    //         SceneManager.LoadScene(gameSceneName);
-    //     }
-    // }
 
     private void StartGame()
     {
@@ -120,16 +113,10 @@ public class TitleScreenManager : MonoBehaviour
 
             SceneLoadData sld = new SceneLoadData(gameSceneName);
             sld.ReplaceScenes = ReplaceOption.All;
-
-            // Tell FishNet's SceneManager to load this scene.
-            // This will load it on the server and instruct clients to do the same.
             networkManager.SceneManager.LoadGlobalScenes(sld);
         }
         else if (steamLobby != null && !steamLobby.IsHost)
         {
-            // Clients don't need to do anything here for the scene load itself.
-            // They will automatically load the scene when the server instructs them.
-            // They might want to show a "Loading..." UI.
             Debug.Log("[TitleScreenManager] Client is waiting for server to load scene: " + gameSceneName);
         }
         else

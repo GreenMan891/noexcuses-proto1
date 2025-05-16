@@ -13,10 +13,10 @@ public class moveScript : NetworkBehaviour
 
     [Header("Movement Settings")]
     public float maxSpeed = 7.0f;
-    public float maxGroundSpeed = 10.0f;         // Maximum speed on ground
+    public float maxGroundSpeed = 10.0f;      
     public float groundAcceleration = 10.0f;
     public float airAcceleration = 1.0f;
-    public float airControl = 2.0f;           // Additional air control factor
+    public float airControl = 2.0f;         
     public float friction = 6.0f;
     public float gravity = 20.0f;
     public float jumpVelocity = 8.0f;
@@ -35,10 +35,6 @@ public class moveScript : NetworkBehaviour
 
     public Animator animator;
 
-    float forward, strafe;
-    bool wishJump = false;
-    //[SerializeField] public GameObject titleScreen;
-
     void Awake()
     {
         cameraRotation = GetComponent<FirstPersonCameraRotation>();
@@ -54,10 +50,6 @@ public class moveScript : NetworkBehaviour
         base.OnStartClient();
         if (IsOwner)
         {
-            // playCamera = Camera.main;
-            // Debug.Log("Camera assigned to player: " + playCamera.name);
-            // playCamera.transform.position = transform.position;
-            // playCamera.transform.SetParent(transform);
             cameraRotation.Init(transform, cam.transform);
         }
     }
@@ -68,7 +60,6 @@ public class moveScript : NetworkBehaviour
         controller.slopeLimit = slopeLimit;
     }
 
-    // Update is called once per frame
     void Update()
     {
         if (!IsOwner)
@@ -85,20 +76,15 @@ public class moveScript : NetworkBehaviour
         if (!hasSwitchedCam)
         {
             switchCam();
-            //titleScreen.SetActive(false);
             hasSwitchedCam = true;
 
         }
         Movement(); 
-        // movePlayer();
-        // Jump();
     }
 
     void Movement() {
-                // Update ground normal for slope handling
         UpdateGroundNormal();
 
-        // Input
         float forward = Input.GetAxisRaw("Vertical");
         animator.SetFloat("ForwardInput", forward);
         float strafe = Input.GetAxisRaw("Horizontal");
@@ -109,7 +95,6 @@ public class moveScript : NetworkBehaviour
         if (input.magnitude > 1f)
             input.Normalize();
 
-        // Desired movement
         Vector3 wishDir = transform.forward * input.y + transform.right * input.x;
         float wishSpeed = input.magnitude * maxGroundSpeed;
         animator.SetFloat("YVelocity", velocity.y);
@@ -117,16 +102,12 @@ public class moveScript : NetworkBehaviour
 
         if (controller.isGrounded)
         {
-            // Align movement to slope
             wishDir = Vector3.ProjectOnPlane(wishDir, groundNormal).normalized;
 
-            // Apply ground friction
             ApplyFriction();
 
-            // Accelerate on ground
             Accelerate(wishDir, wishSpeed, groundAcceleration);
 
-            // Jump
             if (wishJump)
             {
                 velocity.y = jumpVelocity;
@@ -141,23 +122,18 @@ public class moveScript : NetworkBehaviour
             }
             else if (velocity.y < 0)
             {
-                // Keep a slight downward force to stick to ground
                 velocity.y = -1f;
             }
         }
         else
         {
-            // Air acceleration
             Accelerate(wishDir.normalized, wishSpeed, airAcceleration);
 
-            // Air control tweak (Q3 style)
             AirControl(wishDir.normalized, wishSpeed);
 
-            // Apply gravity
             velocity.y -= gravity * Time.deltaTime;
         }
 
-        // Move character
         controller.Move(velocity * Time.deltaTime);
 
         if (cam != null)
@@ -182,9 +158,6 @@ public class moveScript : NetworkBehaviour
         }
     }
 
-    /// <summary>
-    /// Applies friction to horizontal velocity.
-    /// </summary>
     private void ApplyFriction()
     {
         Vector3 horizVel = new Vector3(velocity.x, 0, velocity.z);
@@ -199,9 +172,6 @@ public class moveScript : NetworkBehaviour
         velocity.z = horizVel.z;
     }
 
-    /// <summary>
-    /// Standard Q3 acceleration.
-    /// </summary>
     private void Accelerate(Vector3 wishDir, float wishSpeed, float accel)
     {
         float currentSpeed = Vector3.Dot(velocity, wishDir);
@@ -214,9 +184,6 @@ public class moveScript : NetworkBehaviour
         velocity += accelSpeed * wishDir;
     }
 
-    /// <summary>
-    /// Adds additional air control when airborne, based on Q3 behavior.
-    /// </summary>
     private void AirControl(Vector3 wishDir, float wishSpeed)
     {
         if (Mathf.Abs(Input.GetAxisRaw("Vertical")) < 0.001f || wishSpeed < 0.001f) return;
